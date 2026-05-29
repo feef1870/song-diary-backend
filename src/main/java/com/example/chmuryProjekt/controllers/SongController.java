@@ -1,5 +1,6 @@
 package com.example.chmuryProjekt.controllers;
 
+import com.example.chmuryProjekt.dto.SongResponse;
 import com.example.chmuryProjekt.entities.Song;
 import com.example.chmuryProjekt.services.SongService;
 import jakarta.validation.Valid;
@@ -8,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/songs")
@@ -17,8 +17,11 @@ public class SongController {
     private final SongService songService;
 
     @GetMapping
-    public List<Song> findAll() {
-        return songService.findAll();
+    public ResponseEntity<SongResponse> findAll(
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize
+    ) {
+        return ResponseEntity.ok(songService.findAll(pageNo, pageSize));
     }
 
     @PostMapping("/add")
