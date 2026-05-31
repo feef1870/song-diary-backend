@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "songs")
 @Getter
@@ -30,4 +33,7 @@ public class Song {
     @NotBlank(message = "Name can not be blank")
     @Column(name = "name", nullable = false)
     private String name;
+
+    @OneToMany(mappedBy = "song", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 }

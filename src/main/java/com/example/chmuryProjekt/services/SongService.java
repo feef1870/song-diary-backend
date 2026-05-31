@@ -1,8 +1,9 @@
 package com.example.chmuryProjekt.services;
 
-import com.example.chmuryProjekt.dto.SongDto;
-import com.example.chmuryProjekt.dto.SongResponse;
+import com.example.chmuryProjekt.dto.*;
+import com.example.chmuryProjekt.entities.Comment;
 import com.example.chmuryProjekt.entities.Song;
+import com.example.chmuryProjekt.repositories.CommentRepository;
 import com.example.chmuryProjekt.repositories.SongRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +19,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SongService {
     private final SongRepository songRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
-    public Song addSong(Song song) {
-        return songRepository.save(song);
+    public SongDto addSong(SongRequest request) {
+        Song song = new Song();
+        song.setName(request.name());
+        song.setAlbum(request.album());
+        song.setBand(request.band());
+
+        Song savedSong = songRepository.save(song);
+
+        return new SongDto(
+                savedSong.getId(),
+                savedSong.getBand(),
+                savedSong.getAlbum(),
+                savedSong.getName()
+        );
+    }
+
+    @Transactional
+    public void deleteSong(Long id) {
+        songRepository.deleteById(id);
+    }
+
+    public boolean existsById(Long id) {
+        return songRepository.existsById(id);
     }
 
     public SongResponse findAll(int pageNo, int pageSize) {
@@ -47,5 +70,27 @@ public class SongService {
 
     public List<Song> findByName(String name) {
         return songRepository.findByName(name);
+    }
+
+    public SongDetailsDto getSongDetails(Long songId) {
+        Song song = songRepository.findById(songId).orElseThrow(() -> new RuntimeException("Song not found"));
+
+        List<CommentDto> commentDtos = song.getComments().stream()
+                .map(c -> new CommentDto(c.getId(), c.getContent(), c.getCreatedAt()))
+                .toList();
+
+        return new SongDetailsDto(song.getId(), song.getName(), song.getAlbum(), song.getBand(), commentDtos);
+    }
+
+    public CommentDto addCommentToSong(Long songId, String content) {
+        Song song = songRepository.findById(songId).orElseThrow(() -> new RuntimeException("Song not found"));
+
+        Comment comment = new Comment();
+        comment.setContent(content);
+        comment.setSong(song);
+
+        Comment savedComment = commentRepository.save(comment);
+
+        return new CommentDto(savedComment.getId(), savedComment.getContent(), savedComment.getCreatedAt());
     }
 }
